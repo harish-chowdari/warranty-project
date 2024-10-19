@@ -20,7 +20,7 @@ const addWarranty = async (req, res) => {
 
     const { purchaseDate, warrantyPeriod, purchaseAddress, productId } = req.body;
 
-    if (!purchaseDate || !warrantyPeriod || !productId || !purchaseAddress) {
+    if (!purchaseDate || !warrantyPeriod || !purchaseAddress) {
       return res
         .status(200)
         .json({

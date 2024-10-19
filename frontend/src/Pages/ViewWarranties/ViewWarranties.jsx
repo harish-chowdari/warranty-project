@@ -41,6 +41,7 @@ const ViewWarranties = () => {
                             <th>Product Name</th>
                             <th>Product Image</th>
                             <th>Days Left</th>
+                            <th>Purchase Date</th>
                         </tr>
                     </thead>
                     <tbody className={Styles.tbody}>
@@ -52,6 +53,7 @@ const ViewWarranties = () => {
                                 </td>
 
                                 <td className={Styles.td}>{calculateDaysLeft(item.productId.warrantyPeriod)} days</td>
+                                <td>{item.purchaseDate.slice(0,10)}</td>
                             </tr>
                         ))}
                     </tbody>

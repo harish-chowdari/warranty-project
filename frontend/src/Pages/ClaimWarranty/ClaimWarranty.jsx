@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "../../axios";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -11,10 +11,18 @@ const ClaimWarranty = () => {
     purchaseDate: "",
     warrantyPeriod: "",
     purchaseAddress: "",
+    productId: "",
   });
 
   const userId = localStorage.getItem("userId");
+// from url take product id
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const productId = window.location.pathname.split("/").pop();
+    setProductData({ ...productData, productId });
+  })
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -23,7 +31,8 @@ const ClaimWarranty = () => {
       const res = await axios.post(`/claim-warranty/${userId}`, {
         purchaseDate:productData.purchaseDate,
         warrantyPeriod: productData.warrantyPeriod,
-        purchaseAddress: productData.purchaseAddress
+        purchaseAddress: productData.purchaseAddress,
+        productId: productData.productId
         
       });
 
