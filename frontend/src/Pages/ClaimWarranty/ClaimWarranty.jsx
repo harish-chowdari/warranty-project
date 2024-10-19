@@ -15,38 +15,36 @@ const ClaimWarranty = () => {
   });
 
   const userId = localStorage.getItem("userId");
-// from url take product id
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const productId = window.location.pathname.split("/").pop();
+    console.log(productId);
     setProductData({ ...productData, productId });
-  })
+  }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       toast.dismiss();
       const res = await axios.post(`/claim-warranty/${userId}`, {
-        purchaseDate:productData.purchaseDate,
+        purchaseDate: productData.purchaseDate,
         warrantyPeriod: productData.warrantyPeriod,
         purchaseAddress: productData.purchaseAddress,
-        productId: productData.productId
-        
+        productId: productData.productId,
       });
 
       if (res.data.missingFields) {
         toast.error("All fields are required!");
-        
-      }
-
-      else if (res.data.userNotFound) {
+      } else if (res.data.userNotFound) {
         toast.error(res.data.userNotFound);
-        
-      } else if(res.data.warrantyAdded) {
+      }
+        else if (res.data.warrantyAlreadyAdded) {
+          toast.error(res.data.warrantyAlreadyAdded);
+        }
+      else if (res.data.warrantyAdded) {
         toast.success("Claimed warranty successfully!");
-        
       }
     } catch (error) {
       console.log(error);
@@ -81,7 +79,7 @@ const ClaimWarranty = () => {
           onChange={(e) =>
             setProductData({ ...productData, warrantyPeriod: e.target.value })
           }
-        /> 
+        />
 
         <label htmlFor="purchaseAddress">Purchase Address:</label>
         <input

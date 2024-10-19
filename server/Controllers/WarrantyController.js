@@ -29,6 +29,12 @@ const addWarranty = async (req, res) => {
         });
     }
 
+    if(user.warranty.some(warranty => warranty.productId.toString() === productId)) {
+      return res
+        .status(200)
+        .json({ warrantyAlreadyAdded: "You have already claimed this warranty" });
+    }
+
     user.warranty.push({
       purchaseDate,
       warrantyPeriod,
