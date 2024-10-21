@@ -28,9 +28,8 @@ const UserSchema = new mongoose.Schema({
             type: Date,
             required: true
         },
-        warrantyPeriod: {
-            type: Date,
-            required: true  
+        billImage: {
+            type: String
         },
         purchaseAddress: {
             type: String,

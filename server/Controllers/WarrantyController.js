@@ -18,14 +18,14 @@ const addWarranty = async (req, res) => {
       return res.status(200).json({ userNotFound: "User not found" });
     }
 
-    const { purchaseDate, warrantyPeriod, purchaseAddress, productId } = req.body;
+    const { purchaseDate, billImage, purchaseAddress, productId } = req.body;
 
-    if (!purchaseDate || !warrantyPeriod || !purchaseAddress) {
+    if (!purchaseDate || !billImage || !purchaseAddress) {
       return res
         .status(200)
         .json({
           missingFields:
-            "Purchase date, warranty period, and purchase address are required",
+            "Purchase date, bill image, and purchase address are required",
         });
     }
 
@@ -37,7 +37,7 @@ const addWarranty = async (req, res) => {
 
     user.warranty.push({
       purchaseDate,
-      warrantyPeriod,
+      billImage,
       purchaseAddress,
       productId
     });

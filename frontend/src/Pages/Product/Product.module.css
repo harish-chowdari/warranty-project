@@ -51,7 +51,7 @@ text-align: center;
 }
 
 .product img {
-    min-width: 600px;
+    width: 450px;
     height: 350px;
 }
 
