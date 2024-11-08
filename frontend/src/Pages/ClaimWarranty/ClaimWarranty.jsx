@@ -9,7 +9,6 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 const ClaimWarranty = () => {
   const [productData, setProductData] = useState({
     purchaseDate: "",
-    billImage: "",
     purchaseAddress: "",
     productId: "",
   });
@@ -30,7 +29,6 @@ const ClaimWarranty = () => {
       toast.dismiss();
       const res = await axios.post(`/claim-warranty/${userId}`, {
         purchaseDate: productData.purchaseDate,
-        billImage: productData.billImage,
         purchaseAddress: productData.purchaseAddress,
         productId: productData.productId,
       });
@@ -70,16 +68,7 @@ const ClaimWarranty = () => {
           }
         />
 
-        <label htmlFor="billImage"> Bill Image:</label>
-        <input
-          type="text"
-          id="billImage"
-          name="billImage"
-          value={productData.billImage}
-          onChange={(e) =>
-            setProductData({ ...productData, billImage: e.target.value })
-          }
-        />
+        
 
         <label htmlFor="purchaseAddress">Purchase Address:</label>
         <input

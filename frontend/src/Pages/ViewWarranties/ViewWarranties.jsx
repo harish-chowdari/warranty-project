@@ -58,7 +58,7 @@ const ViewWarranties = () => {
                     <input
                         onChange={(e) => setSearchTerm(e.target.value)}
                         type="text"
-                        placeholder="Search..."
+                        placeholder="Enter Product Name"
                     />
                 </div>
                 <p className={Styles.or}>or</p>
