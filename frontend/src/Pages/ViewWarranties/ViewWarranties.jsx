@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../axios";
 import Styles from "./ViewWarranties.module.css";
+import { useNavigate } from "react-router-dom";
 
 const ViewWarranties = () => {
     const userId = localStorage.getItem("userId");
@@ -8,7 +9,7 @@ const ViewWarranties = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
-
+    const navigate = useNavigate();
     const getWarranty = async () => {
         try {
             const res = await axios.get(`/warranty/${userId}`);
@@ -16,6 +17,10 @@ const ViewWarranties = () => {
         } catch (error) {
             console.log(error);
         }
+    };
+
+    const handleViewWarranty = (warranty) => {
+        navigate(`/home/warranty`, { state: { warranty } });
     };
 
     useEffect(() => {
@@ -85,6 +90,7 @@ const ViewWarranties = () => {
                                 <th>Product Image</th>
                                 <th>Warranty Left</th>
                                 <th>Purchase Date</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody className={Styles.tbody}>
@@ -105,6 +111,9 @@ const ViewWarranties = () => {
                                     </td>
                                     <td>
                                         {new Date(item?.purchaseDate).toLocaleDateString()}
+                                    </td>
+                                    <td className={Styles.td}>
+                                        <button onClick={() => handleViewWarranty(item)} className={Styles.button}>View</button>
                                     </td>
                                 </tr>
                             ))}
