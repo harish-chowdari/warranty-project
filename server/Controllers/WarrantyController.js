@@ -109,82 +109,135 @@ async function getWarranty(req, res) {
 
 
 const sendWarrantyRemainderMail = async () => {
-    try {
-      const users = await User.find();
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD,
-        },
+  try {
+      const users = await User.find().populate({
+          path: "warranty.productId",
+          model: Product, 
       });
-  
+
+      const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASSWORD,
+          },
+      });
+
       const now = new Date();
-      const today = new Date().toISOString().split('T')[0]
-  
+      const today = new Date().toISOString().split("T")[0];
+
       for (const user of users) {
-        let warrantiesToNotify = [];
-  
-        for (const warranty of user.warranty) {
-          const warrantyDate = new Date(warranty.warrantyPeriod);
-          //populate product id
-          const product = await Product.findById(warranty.productId);
-          //console.log(product);
-          const differenceInTime = warrantyDate - now;
-          const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-  
-          if ((differenceInDays === 20 || differenceInDays === 10) && differenceInDays > 0) {
-  
-            const emailRecord = await Emails.findOne({
-              
-              warrantyId: warranty._id,
-              dateSent: today, 
-            });
-  
-            if (!emailRecord) {
-              warrantiesToNotify.push({
-                warrantyId: warranty._id,
-                purchaseAddress: warranty.purchaseAddress,
-                daysRemaining: differenceInDays,
+          let warrantiesToNotify = [];
+
+          for (const warranty of user.warranty) {
+              if (!warranty.productId || !warranty.warrantyPeriod) continue;
+
+              const warrantyDate = new Date(warranty.warrantyPeriod);
+              const totalWarrantyDays = Math.ceil(
+                  (warrantyDate - new Date(warranty.purchaseDate)) / (1000 * 3600 * 24)
+              );
+
+              const differenceInTime = warrantyDate - now;
+              const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+
+              //if (differenceInDays < 0) continue;
+
+              const remainingPercentage = (differenceInDays / totalWarrantyDays) * 100;
+
+              console.log(remainingPercentage, user.name, warranty.productId.productName);
+
+              const emailRecord = await Emails.findOne({
+                  warrantyId: warranty._id,
+                  dateSent: today,
               });
-            }
+
+              if (!emailRecord) {
+
+                if (remainingPercentage <= 80 && remainingPercentage > 20) {
+                      warrantiesToNotify.push({
+                          ProductName: warranty.productId.productName,
+                          warrantyId: warranty._id,
+                          purchaseAddress: warranty.purchaseAddress,
+                          daysRemaining: differenceInDays+1,
+                          
+                      });
+                  } else if (remainingPercentage <= 20 && remainingPercentage >= 0) {
+                      warrantiesToNotify.push({
+                          ProductName: warranty?.productId?.productName,
+                          warrantyId: warranty._id,
+                          purchaseAddress: warranty.purchaseAddress,
+                          daysRemaining: differenceInDays+1,
+                          
+                      });
+                  } else if (remainingPercentage < 0) {
+                      warrantiesToNotify.push({
+                          ProductName: warranty?.productId?.productName,
+                          warrantyId: warranty._id,
+                          purchaseAddress: warranty.purchaseAddress,
+                          daysRemaining: "Expired",
+                          
+                      });
+                  }
+              }
           }
-        }
-  
-        if (warrantiesToNotify.length > 0) {
-          const warrantyDetails = warrantiesToNotify.map(
-            warranty => `<li> Address: ${warranty.purchaseAddress}, Days Remaining: ${warranty.daysRemaining}</li>`
-          ).join('');
-  
-          const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: "Warranty Reminder",
-            html: `<p>Your following warranties will expire soon:</p><ul>${warrantyDetails}</ul><p>Please renew them.</p>`,
-          };
-  
-          try {
-            await transporter.sendMail(mailOptions);
-            console.log(`Email sent to: ${user.email}`);
-  
-  
-            for (const warranty of warrantiesToNotify) {
-              await Emails.create({
-                warrantyId: warranty.warrantyId,
-                dateSent: today  
-              });
-            }
-          } catch (error) {
-            console.error(`Failed to send email to ${user.email}: ${error}`);
+
+          if (warrantiesToNotify.length > 0) {
+              const warrantyDetails = warrantiesToNotify
+                  .map(
+                      (warranty) =>
+                          `<li>
+                            ProductName: ${warranty?.ProductName} <br/> 
+                            Address: ${warranty?.purchaseAddress} <br/>
+                            ${warranty?.daysRemaining === "Expired" 
+                            ? "Warranty Status: Expired" 
+                            : `Warranty Left:  (${warranty?.daysRemaining} days)`}                            
+                          </li> 
+                          <br/>`
+                      )
+                  .join("");
+
+              const mailOptions = {
+                  from: process.env.EMAIL_USER,
+                  to: user.email,
+                  subject: "Warranty Reminder",
+                  html: `<p>Your following warranties have reached the specified remaining period:</p><ul>${warrantyDetails}</ul><p>Please take appropriate action.</p>`,
+              };
+
+              try {
+                  await transporter.sendMail(mailOptions);
+                  console.log(`Email sent to: ${user.email}`);
+
+                  // Save sent email records
+                  for (const warranty of warrantiesToNotify) {
+                      await Emails.create({
+                          warrantyId: warranty.warrantyId,
+                          dateSent: today,
+                      });
+                  }
+              } catch (error) {
+                  console.error(`Failed to send email to ${user.email}: ${error}`);
+              }
           }
-        }
       }
-  
+
       console.log({ message: "Email notifications sent where applicable." });
-    } catch (error) {
+  } catch (error) {
       console.error(error);
-    }
-  };
+  }
+};
+
+// Run the cron job every day at midnight
+cron.schedule("0 0 * * *", async () => {
+  try {
+      await sendWarrantyRemainderMail();
+  } catch (error) {
+      console.error(error);
+  }
+});
+
+
+
+
   
   
   
